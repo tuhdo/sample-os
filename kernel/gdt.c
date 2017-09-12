@@ -8,6 +8,9 @@ gdt_t gdt = {
     .free_id = 0
 };
 
+/* Add a new descriptor into GDT. Currently scanning for the entire table to retrieve the current max PID 
+ * to obtain the next PID. This must be optimized later, with randomization for O(1) performance.
+ */
 uint16_t add_segment(descriptor_table* t, uint32_t base, uint32_t limit, uint32_t access, uint16_t id, uint8_t auto_id) {
     segment_descriptor *s;
 
