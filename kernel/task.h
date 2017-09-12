@@ -75,6 +75,8 @@ extern struct tss init_tss;
  *      
  * - TASK_START marks the start of a code segment and TASK_END marks the end. The code length is calculated 
  * from the difference between the two points.
+ *
+ * For example usage, see irq.c.
  */
 #define TASK_START(name, init_func)                                     \
     void __TASK_END_##name();                                           \
