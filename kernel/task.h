@@ -127,8 +127,10 @@ extern struct tss init_tss;
                         SEG4K | SEG_AVAILABLE_1 | SEG32 | SEG64_0 | SEG_LIMIT_16_19(0xf) | \
                         SEG_PRESENT | SEG_RING0 | SEG_CODE_DATA | SEG_RWE); \
     }                                                                   \
-    /* 0xa0 is the ID of the first process descriptor in the GDT table. \
-       Currently hardcoded for testing. */ \
+    /* 0xa0 is the ID of the first task descriptor in the GDT table. \
+       At the moment, there are 20 descriptors in GDT, 8 bytes each.    \
+       So, the first task descriptor offset is at 0xa0.                 \
+       Currently hardcoded for testing. */                              \
     void name##_start() {                                               \
         asm("pushw 0xa0");                                              \
         asm("pushd 0x0"); \
