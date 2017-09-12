@@ -39,6 +39,10 @@ void _start() {
   /* asm("les ebx, es:0x12345678"); */
   /* int a = 1/0; */
   lapic_enable_timer(TIMER_PERIODIC, 0x100,TIMER_DIV_128, 32);
+  
+  /* Create an infinite loop for testing LAPIC. If the LAPIC timer handler is actually
+   * called, it will return to the address after the loop and start task 1. It works so far.
+   */
   for (;;) {}
   INIT_TASK(task1);
   RUN_TASK(task1);
