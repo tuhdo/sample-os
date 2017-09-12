@@ -4,6 +4,7 @@
 
 #pragma once
 
+/* Task State Structure records the machine state of a process */
 struct tss {
     uint16_t link_r;
     uint16_t link_h;
@@ -47,17 +48,34 @@ struct tss {
 
 extern struct tss init_tss;
 
+/* Add a descriptor entry to the Local Descriptor Table of a process */
 #define ldt_add_segment(name, base, limit, access)  \
     add_segment(name, base, limit, access, 0x0, 1)
 
+/* Statically allocate a task/process image right inside the kernel */
 #define TASK_REGISTER(name)                     \
     void name ## _start();                      \
     void name ## _init();                       \
     extern uint16_t task_id_##name              \
 
+/* Shift 3 bits to put the task selector value in the variable into the proper location in the Task Register */
 #define TASK_SELECTOR(name) (task_id_##name << 3)
+
+/* 0x35000 is the currently chosen starting address for process storage. */
 #define TASK_DATA_ADDRESS(id) 0x35000 + id * 0x1000
 
+/* 
+ * Generate init data and functions for every registered process (using TASK_REGISTER above) 
+ * Currently, the kernel records the start and end of a process code segment by wrapping the code around the 2 calls:
+ * TAKS_START() and TASK_END(). Here is how to use the 2 macros accurately:
+ *
+ *      TASK_START(task_name, init_func)
+ *      ..... task code .....
+ *      TASK_END()
+ *      
+ * - TASK_START marks the start of a code segment and TASK_END marks the end. The code length is calculated 
+ * from the difference between the two points.
+ */
 #define TASK_START(name, init_func)                                     \
     void __TASK_END_##name();                                           \
     void __TASK_START_##name(){}                                        \
@@ -86,7 +104,7 @@ extern struct tss init_tss;
         ldt_##name.size = DESCRIPTOR_SIZE * 3;                          \
         ldt_##name.free_id = 0;                                         \
                                                                         \
-        task_id_##name = gdt_add_segment((uintptr_t) &name##_tss, 0x067, \
+        task_id_##name = gdt_add_segment((uintptr_t) &name##_tss, 0x067, \ 
                                          SEG1B | SEG_AVAILABLE_1 | SEG_LIMIT_16_19(0x0) | \
                                          SEG_PRESENT | SEG_RING0 | SEG_SYSTEM | SEG_TSS32_AVAILABLE); \
         ldt_id = gdt_add_segment((uintptr_t) &name##_ldt_segments, ldt_##name.size, \
@@ -109,7 +127,8 @@ extern struct tss init_tss;
                         SEG4K | SEG_AVAILABLE_1 | SEG32 | SEG64_0 | SEG_LIMIT_16_19(0xf) | \
                         SEG_PRESENT | SEG_RING0 | SEG_CODE_DATA | SEG_RWE); \
     }                                                                   \
-                                                                        \
+    /* 0xa0 is the ID of the first process descriptor in the GDT table. \
+       Currently hardcoded for testing. */ \
     void name##_start() {                                               \
         asm("pushw 0xa0");                                              \
         asm("pushd 0x0"); \
